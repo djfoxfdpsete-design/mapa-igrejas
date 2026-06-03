@@ -13,6 +13,10 @@ export const AppProvider = ({ children }) => {
   const [selectedMacro, setSelectedMacro] = useState(null);
   const [selectedRegional, setSelectedRegional] = useState(null);
 
+  // Modo de inserção no mapa
+  const [isPlacingChurch, setIsPlacingChurch] = useState(false);
+  const [pendingChurchData, setPendingChurchData] = useState(null);
+
   // Load Data from Supabase
   const loadData = async () => {
     let { data: macrosData } = await supabase.from('macros').select('*');
@@ -61,15 +65,30 @@ export const AppProvider = ({ children }) => {
       .eq('id', id);
   };
 
-  const addChurch = async (regionalId, churchName) => {
+  const startPlacingChurch = (regionalId, churchName) => {
+    setPendingChurchData({ regionalId, churchName });
+    setIsPlacingChurch(true);
+  };
+
+  const confirmChurchPlacement = async (lat, lng) => {
+    if (!pendingChurchData) return;
+    
     const { data, error } = await supabase
       .from('churches')
-      .insert([{ name: churchName, regional_id: regionalId }])
+      .insert([{ name: pendingChurchData.churchName, regional_id: pendingChurchData.regionalId, lat, lng }])
       .select();
     
     if (data && data.length > 0) {
       setChurches(prev => [...prev, data[0]]);
     }
+    
+    setIsPlacingChurch(false);
+    setPendingChurchData(null);
+  };
+
+  const cancelChurchPlacement = () => {
+    setIsPlacingChurch(false);
+    setPendingChurchData(null);
   };
 
   const deleteChurch = async (churchId) => {
@@ -95,7 +114,11 @@ export const AppProvider = ({ children }) => {
       selectedMacro, setSelectedMacro,
       selectedRegional, setSelectedRegional,
       updateRegional,
-      addChurch,
+      startPlacingChurch,
+      confirmChurchPlacement,
+      cancelChurchPlacement,
+      isPlacingChurch,
+      pendingChurchData,
       deleteChurch
     }}>
       {children}

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON, Polyline, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { AppContext } from '../context/AppContext';
 import goiasGeoJson from '../data/goias.json';
@@ -23,6 +23,19 @@ const MapController = () => {
     }
   }, [selectedRegional, selectedMacro, map, regionals]);
 
+  return null;
+};
+
+// Component to handle clicks when placing a church
+const MapClickListener = () => {
+  const { isPlacingChurch, confirmChurchPlacement } = useContext(AppContext);
+  useMapEvents({
+    click(e) {
+      if (isPlacingChurch) {
+        confirmChurchPlacement(e.latlng.lat, e.latlng.lng);
+      }
+    }
+  });
   return null;
 };
 
@@ -51,7 +64,7 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 }
 
 const MapComponent = () => {
-  const { regionals, macros, churches, setSelectedRegional, selectedRegional } = useContext(AppContext);
+  const { regionals, macros, churches, setSelectedRegional, selectedRegional, isPlacingChurch } = useContext(AppContext);
   const [geoData, setGeoData] = useState(null);
 
   useEffect(() => {
@@ -107,7 +120,7 @@ const MapComponent = () => {
   };
 
   return (
-    <div style={{ flex: 1, position: 'relative' }} id="map-export-area">
+    <div style={{ flex: 1, position: 'relative', cursor: isPlacingChurch ? 'crosshair' : 'default' }} id="map-export-area">
       <MapContainer 
         center={[-15.9324, -50.1414]} 
         zoom={7} 
@@ -127,6 +140,7 @@ const MapComponent = () => {
         )}
         
         <MapController />
+        <MapClickListener />
 
         {/* Linhas e Círculos das Igrejas Locais (Renderizados apenas para a Regional Selecionada) */}
         {selectedRegional && churches.filter(c => c.regional_id === selectedRegional.id && c.lat && c.lng).map(church => {

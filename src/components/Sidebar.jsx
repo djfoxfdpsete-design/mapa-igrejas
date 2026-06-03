@@ -14,7 +14,10 @@ const Sidebar = () => {
     selectedRegional, 
     setSelectedRegional,
     updateRegional,
-    addChurch,
+    updateRegional,
+    startPlacingChurch,
+    isPlacingChurch,
+    cancelChurchPlacement,
     deleteChurch,
     setIsAuthenticated // Mock logout
   } = useContext(AppContext);
@@ -154,34 +157,42 @@ const Sidebar = () => {
             <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
             
             <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Igrejas Locais</h3>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-              <input 
-                type="text" 
-                className="edit-input" 
-                placeholder="Nome da Igreja..."
-                value={newChurchName}
-                onChange={(e) => setNewChurchName(e.target.value)}
-                style={{ flex: 1, marginBottom: 0 }}
-              />
-              <button 
-                onClick={() => {
-                  if(newChurchName.trim()) {
-                    addChurch(selectedRegional.id, newChurchName);
-                    setNewChurchName('');
-                  }
-                }}
-                style={{
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '0 12px',
-                  cursor: 'pointer'
-                }}
-              >
-                +
-              </button>
-            </div>
+            {isPlacingChurch ? (
+              <div style={{ padding: '12px', background: '#fef3c7', color: '#b45309', borderRadius: '6px', fontSize: '12px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <strong>Modo de Inserção Ativo</strong>
+                <span>Clique em qualquer lugar no mapa para posicionar a igreja ou clique abaixo para cancelar.</span>
+                <button onClick={cancelChurchPlacement} style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <input 
+                  type="text" 
+                  className="edit-input" 
+                  placeholder="Nome da Igreja..."
+                  value={newChurchName}
+                  onChange={(e) => setNewChurchName(e.target.value)}
+                  style={{ flex: 1, marginBottom: 0 }}
+                />
+                <button 
+                  onClick={() => {
+                    if(newChurchName.trim()) {
+                      startPlacingChurch(selectedRegional.id, newChurchName);
+                      setNewChurchName('');
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0 12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            )}
 
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxHeight: '200px', overflowY: 'auto' }}>
               {churches.filter(c => c.regional_id === selectedRegional.id).map(church => (
