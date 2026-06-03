@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON, Polyline, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import { AppContext } from '../context/AppContext';
 import goiasGeoJson from '../data/goias.json';
@@ -51,7 +51,7 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 }
 
 const MapComponent = () => {
-  const { regionals, macros, setSelectedRegional } = useContext(AppContext);
+  const { regionals, macros, churches, setSelectedRegional, selectedRegional } = useContext(AppContext);
   const [geoData, setGeoData] = useState(null);
 
   useEffect(() => {
@@ -128,6 +128,36 @@ const MapComponent = () => {
         
         <MapController />
 
+        {/* Linhas e Círculos das Igrejas Locais (Renderizados apenas para a Regional Selecionada) */}
+        {selectedRegional && churches.filter(c => c.regional_id === selectedRegional.id && c.lat && c.lng).map(church => {
+          const macro = macros.find(m => m.id === selectedRegional.macroRegionId);
+          const color = macro ? macro.colorHex : '#333';
+          
+          return (
+            <React.Fragment key={`church-${church.id}`}>
+              <Polyline 
+                positions={[[selectedRegional.lat, selectedRegional.lng], [church.lat, church.lng]]} 
+                color={color}
+                weight={2}
+                opacity={0.7}
+                dashArray="5, 5"
+              />
+              <CircleMarker 
+                center={[church.lat, church.lng]} 
+                pathOptions={{ color: color, fillColor: '#fff', fillOpacity: 1, weight: 3 }}
+                radius={6}
+              >
+                <Popup>
+                  <div style={{ textAlign: 'center' }}>
+                    <h4 style={{ margin: '0 0 5px 0' }}>{church.name}</h4>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            </React.Fragment>
+          );
+        })}
+
+        {/* Marcadores das Sedes Regionais */}
         {regionals.map(regional => {
           const macro = macros.find(m => m.id === regional.macroRegionId);
           return (
