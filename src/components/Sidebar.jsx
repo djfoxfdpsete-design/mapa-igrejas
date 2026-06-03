@@ -14,7 +14,6 @@ const Sidebar = () => {
     selectedRegional, 
     setSelectedRegional,
     updateRegional,
-    updateRegional,
     startPlacingChurch,
     isPlacingChurch,
     cancelChurchPlacement,
