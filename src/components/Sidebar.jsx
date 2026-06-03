@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Map, List, Edit2, Download, LogOut, ChevronLeft } from 'lucide-react';
 import html2canvas from 'html2canvas';
@@ -8,13 +8,18 @@ const Sidebar = () => {
   const { 
     macros, 
     regionals, 
+    churches,
     selectedMacro, 
     setSelectedMacro, 
     selectedRegional, 
     setSelectedRegional,
     updateRegional,
+    addChurch,
+    deleteChurch,
     setIsAuthenticated // Mock logout
   } = useContext(AppContext);
+
+  const [newChurchName, setNewChurchName] = useState('');
 
   const totalIgrejas = regionals.reduce((sum, r) => sum + r.churchesCount, 0);
 
@@ -146,7 +151,56 @@ const Sidebar = () => {
               />
             </div>
 
-            <button onClick={exportPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+            
+            <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Igrejas Locais</h3>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <input 
+                type="text" 
+                className="edit-input" 
+                placeholder="Nome da Igreja..."
+                value={newChurchName}
+                onChange={(e) => setNewChurchName(e.target.value)}
+                style={{ flex: 1, marginBottom: 0 }}
+              />
+              <button 
+                onClick={() => {
+                  if(newChurchName.trim()) {
+                    addChurch(selectedRegional.id, newChurchName);
+                    setNewChurchName('');
+                  }
+                }}
+                style={{
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0 12px',
+                  cursor: 'pointer'
+                }}
+              >
+                +
+              </button>
+            </div>
+
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxHeight: '200px', overflowY: 'auto' }}>
+              {churches.filter(c => c.regional_id === selectedRegional.id).map(church => (
+                <li key={church.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '6px', marginBottom: '6px', fontSize: '13px' }}>
+                  <span>{church.name}</span>
+                  <button 
+                    onClick={() => deleteChurch(church.id)}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                  >
+                    X
+                  </button>
+                </li>
+              ))}
+              {churches.filter(c => c.regional_id === selectedRegional.id).length === 0 && (
+                <li style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '10px 0' }}>Nenhuma igreja cadastrada</li>
+              )}
+            </ul>
+
+            <button onClick={exportPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', marginTop: '24px' }}>
               <Download size={16} /> Baixar PDF da Regional
             </button>
           </div>

@@ -8,6 +8,7 @@ export const AppProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [macros, setMacros] = useState([]);
   const [regionals, setRegionals] = useState([]);
+  const [churches, setChurches] = useState([]);
   
   const [selectedMacro, setSelectedMacro] = useState(null);
   const [selectedRegional, setSelectedRegional] = useState(null);
@@ -16,6 +17,7 @@ export const AppProvider = ({ children }) => {
   const loadData = async () => {
     let { data: macrosData } = await supabase.from('macros').select('*');
     let { data: regionalsData } = await supabase.from('regionals').select('*');
+    let { data: churchesData } = await supabase.from('churches').select('*');
 
     // Inicialização da base de dados se estiver vazia
     if (!macrosData || macrosData.length === 0) {
@@ -30,6 +32,7 @@ export const AppProvider = ({ children }) => {
 
     setMacros(macrosData || []);
     setRegionals(regionalsData || []);
+    setChurches(churchesData || []);
   };
 
   useEffect(() => {
@@ -58,6 +61,22 @@ export const AppProvider = ({ children }) => {
       .eq('id', id);
   };
 
+  const addChurch = async (regionalId, churchName) => {
+    const { data, error } = await supabase
+      .from('churches')
+      .insert([{ name: churchName, regional_id: regionalId }])
+      .select();
+    
+    if (data && data.length > 0) {
+      setChurches(prev => [...prev, data[0]]);
+    }
+  };
+
+  const deleteChurch = async (churchId) => {
+    await supabase.from('churches').delete().eq('id', churchId);
+    setChurches(prev => prev.filter(c => c.id !== churchId));
+  };
+
   const login = (password) => {
     if (password === 'lideranca123' || password === '1234') {
       setIsAuthenticated(true);
@@ -72,9 +91,12 @@ export const AppProvider = ({ children }) => {
       login,
       macros,
       regionals,
+      churches,
       selectedMacro, setSelectedMacro,
       selectedRegional, setSelectedRegional,
-      updateRegional
+      updateRegional,
+      addChurch,
+      deleteChurch
     }}>
       {children}
     </AppContext.Provider>
