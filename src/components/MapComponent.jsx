@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { AppContext } from '../context/AppContext';
-import goiasGeoJson from '../data/goias.geojson'; // Import the JSON directly in Vite
+import goiasGeoJson from '../data/goias.json';
 
 // Component to handle dynamic map centering
 const MapController = () => {
