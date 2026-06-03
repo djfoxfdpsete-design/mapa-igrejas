@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useContext, useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { AppContext } from '../context/AppContext';
+import goiasGeoJson from '../data/goias.geojson'; // Import the JSON directly in Vite
 
 // Component to handle dynamic map centering
 const MapController = () => {
@@ -12,14 +13,13 @@ const MapController = () => {
     if (selectedRegional) {
       map.flyTo([selectedRegional.lat, selectedRegional.lng], 10);
     } else if (selectedMacro) {
-      // Find regionals for this macro and fit bounds
       const rList = regionals.filter(r => r.macroRegionId === selectedMacro.id);
       if (rList.length > 0) {
         const bounds = L.latLngBounds(rList.map(r => [r.lat, r.lng]));
         map.flyToBounds(bounds, { padding: [50, 50] });
       }
     } else {
-      map.flyTo([-15.9324, -50.1414], 7); // Center of Goias
+      map.flyTo([-15.9324, -50.1414], 7);
     }
   }, [selectedRegional, selectedMacro, map, regionals]);
 
@@ -36,8 +36,75 @@ const createStarIcon = (color) => {
   });
 };
 
+// Calculate distance between two lat/lng points
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);  
+  const dLon = (lon2 - lon1) * (Math.PI / 180); 
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    ; 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  return R * c; 
+}
+
 const MapComponent = () => {
   const { regionals, macros, setSelectedRegional } = useContext(AppContext);
+  const [geoData, setGeoData] = useState(null);
+
+  useEffect(() => {
+    // Vite pode importar JSON como objeto nativo
+    setGeoData(goiasGeoJson);
+  }, []);
+
+  // Define o estilo de cada município preenchendo com a cor da Macrorregião mais próxima
+  const styleFeature = (feature) => {
+    if (!regionals || regionals.length === 0) return { fillColor: '#cccccc', weight: 1, color: '#ffffff', fillOpacity: 0.2 };
+
+    // Get a rough center for the polygon
+    let coords = feature.geometry.coordinates[0];
+    if (feature.geometry.type === 'MultiPolygon') {
+      coords = feature.geometry.coordinates[0][0];
+    }
+    
+    // Calculate bounding box center as a proxy for polygon center
+    let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+    coords.forEach(coord => {
+      if (coord[1] < minLat) minLat = coord[1];
+      if (coord[1] > maxLat) maxLat = coord[1];
+      if (coord[0] < minLng) minLng = coord[0];
+      if (coord[0] > maxLng) maxLng = coord[0];
+    });
+    
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+
+    // Find nearest Regional Headquarter
+    let nearestRegional = regionals[0];
+    let minDistance = Infinity;
+
+    regionals.forEach(regional => {
+      const dist = getDistanceFromLatLonInKm(centerLat, centerLng, regional.lat, regional.lng);
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestRegional = regional;
+      }
+    });
+
+    // Find the Macro Region color
+    const macro = macros.find(m => m.id === nearestRegional.macroRegionId);
+    const fillColor = macro ? macro.colorHex : '#cccccc';
+
+    return {
+      fillColor: fillColor,
+      weight: 1, // Borda fina entre as cidades
+      opacity: 0.5,
+      color: 'rgba(255,255,255,0.5)',
+      fillOpacity: 0.6 // Transparencia para ver o mapa base por baixo
+    };
+  };
 
   return (
     <div style={{ flex: 1, position: 'relative' }} id="map-export-area">
@@ -49,8 +116,15 @@ const MapComponent = () => {
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
+        
+        {geoData && (
+          <GeoJSON 
+            data={geoData} 
+            style={styleFeature} 
+          />
+        )}
         
         <MapController />
 

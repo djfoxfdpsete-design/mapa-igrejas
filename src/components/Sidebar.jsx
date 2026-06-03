@@ -105,12 +105,34 @@ const Sidebar = () => {
             <h2 style={{ fontSize: '18px', marginBottom: '16px' }}>Editar Regional</h2>
             
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Nome da Sede</label>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Nome da Sede (Cidade)</label>
               <input 
                 type="text" 
                 className="edit-input" 
                 value={selectedRegional.name}
-                onChange={(e) => updateRegional(selectedRegional.id, e.target.value, selectedRegional.churchesCount)}
+                onChange={(e) => updateRegional(selectedRegional.id, e.target.value, selectedRegional.churchesCount, selectedRegional.pastor_name, selectedRegional.phone, selectedRegional.address, selectedRegional.photo_url)}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Pastor / Liderança</label>
+              <input 
+                type="text" 
+                className="edit-input" 
+                placeholder="Ex: Pr. João"
+                value={selectedRegional.pastor_name || ''}
+                onChange={(e) => updateRegional(selectedRegional.id, selectedRegional.name, selectedRegional.churchesCount, e.target.value, selectedRegional.phone, selectedRegional.address, selectedRegional.photo_url)}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Telefone de Contato</label>
+              <input 
+                type="text" 
+                className="edit-input" 
+                placeholder="(62) 99999-9999"
+                value={selectedRegional.phone || ''}
+                onChange={(e) => updateRegional(selectedRegional.id, selectedRegional.name, selectedRegional.churchesCount, selectedRegional.pastor_name, e.target.value, selectedRegional.address, selectedRegional.photo_url)}
               />
             </div>
 
@@ -120,7 +142,7 @@ const Sidebar = () => {
                 type="number" 
                 className="edit-input" 
                 value={selectedRegional.churchesCount}
-                onChange={(e) => updateRegional(selectedRegional.id, selectedRegional.name, e.target.value)}
+                onChange={(e) => updateRegional(selectedRegional.id, selectedRegional.name, e.target.value, selectedRegional.pastor_name, selectedRegional.phone, selectedRegional.address, selectedRegional.photo_url)}
               />
             </div>
 

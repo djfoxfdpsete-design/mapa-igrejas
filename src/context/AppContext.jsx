@@ -39,22 +39,22 @@ export const AppProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   // Update in Supabase and State
-  const updateRegional = async (id, newName, newCount) => {
+  const updateRegional = async (id, newName, newCount, pastorName = '', phone = '', address = '', photoUrl = '') => {
     const updatedCount = parseInt(newCount) || 0;
     
     // Optimistic UI Update
     setRegionals(prev => 
-      prev.map(r => r.id === id ? { ...r, name: newName, churchesCount: updatedCount } : r)
+      prev.map(r => r.id === id ? { ...r, name: newName, churchesCount: updatedCount, pastor_name: pastorName, phone, address, photo_url: photoUrl } : r)
     );
 
     if (selectedRegional && selectedRegional.id === id) {
-      setSelectedRegional(prev => ({ ...prev, name: newName, churchesCount: updatedCount }));
+      setSelectedRegional(prev => ({ ...prev, name: newName, churchesCount: updatedCount, pastor_name: pastorName, phone, address, photo_url: photoUrl }));
     }
 
     // Database Update
     await supabase
       .from('regionals')
-      .update({ name: newName, churchesCount: updatedCount })
+      .update({ name: newName, churchesCount: updatedCount, pastor_name: pastorName, phone, address, photo_url: photoUrl })
       .eq('id', id);
   };
 
